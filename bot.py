@@ -19,6 +19,22 @@ def run_web():
 buyins = {}
 outchips = {}
 
+# 1. 도움말 명령어 (/help)
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = (
+        "🃏 **바둑 정산 봇 명령어 안내**\n\n"
+        "• `/buy [이름] [금액]` : 바이인 추가 (여러 번 입력 시 자동 합산)\n"
+        "  *(예: `/buy 성민 100000`)*\n\n"
+        "• `/out [이름] [금액]` : 게임 종료 후 아웃칩 등록\n"
+        "  *(예: `/out 성민 350000`)*\n\n"
+        "• `/list` : 현재 바이인 현황 및 총 바이인 보기\n\n"
+        "• `/result` : 최종 정산 (바이인, 아웃칩, 손익 계산) 보기\n\n"
+        "• `/reset` : 모든 정산 데이터 초기화\n\n"
+        "• `/help` : 명령어 설명서 보기"
+    )
+    await update.message.reply_text(text, parse_mode="Markdown")
+
+# 2. 바이인 등록 (/buy)
 async def buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
     args = context.args
     if len(args) < 2:
@@ -33,6 +49,7 @@ async def buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
     buyins[name] = buyins.get(name, 0) + amount
     await update.message.reply_text(f"✅ 바이인 등록: {name} ({buyins[name]:,})")
 
+# 3. 아웃칩 등록 (/out)
 async def out(update: Update, context: ContextTypes.DEFAULT_TYPE):
     args = context.args
     if len(args) < 2:
@@ -47,6 +64,7 @@ async def out(update: Update, context: ContextTypes.DEFAULT_TYPE):
     outchips[name] = amount
     await update.message.reply_text(f"✅ 아웃칩 등록: {name} ({amount:,})")
 
+# 4. 현황 출력 (/list)
 async def show_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not buyins:
         await update.message.reply_text("현재 등록된 바이인 내역이 없습니다.")
@@ -59,6 +77,7 @@ async def show_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text += f"```\n총 바이인 : {total_buyin:,}"
     await update.message.reply_text(text, parse_mode="Markdown")
 
+# 5. 최종 결과 출력 (/result)
 async def show_result(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not buyins:
         await update.message.reply_text("현재 등록된 바이인 내역이 없습니다.")
@@ -79,21 +98,22 @@ async def show_result(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text += "```"
     await update.message.reply_text(text, parse_mode="Markdown")
 
+# 6. 초기화 (/reset)
 async def reset_data(update: Update, context: ContextTypes.DEFAULT_TYPE):
     buyins.clear()
     outchips.clear()
     await update.message.reply_text("🔄 모든 정산 데이터가 초기화되었습니다.")
 
 def main():
-    # 텔레그램 봇 토큰을 아래에 다시 넣어주세요!
-    TOKEN = "8969540703:AAFlCIFEz4ZfYSQ8oE_OWab66O6ng_iXfco"  
+    TOKEN = "8969540703:AAFlCIFEz4ZfYSQ8oE_OWab66O6ng_iXfco"  # 본인 토큰 입력
     
-    # 봇이 켜질 때 가짜 웹 서버도 같이 켜지도록 설정
     t = threading.Thread(target=run_web)
     t.start()
 
     app = ApplicationBuilder().token(TOKEN).build()
 
+    # 명령어 핸들러 등록
+    app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("buy", buy))
     app.add_handler(CommandHandler("out", out))
     app.add_handler(CommandHandler("list", show_list))
